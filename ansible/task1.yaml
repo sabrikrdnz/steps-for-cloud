@@ -1,0 +1,7 @@
+- hosts: all
+  tasks:
+    - name: dev
+      copy:
+        content: 'This is workshop environment'
+        dest: /etc/motd
+      when: "'workshop' in group_names"

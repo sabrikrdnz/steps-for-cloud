@@ -1,0 +1,16 @@
+[workshop]
+13.73.145.176
+
+[development]
+
+[stage]
+
+[production]
+
+[test:children]
+development
+stage
+
+[all:vars]
+ansible_connection=ssh
+ansible_user=uygulama
