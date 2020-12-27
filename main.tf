@@ -7,65 +7,12 @@ provider "azurerm" {
   version = "=2.40.0"
   features {}
 }
-#create resource group
-resource "azurerm_resource_group" "ansible-docker-rg" {
-    name     = "${var.resource_group_name}"
-    location = "${var.resource_group_location}"
-    tags      = {
-      Environment = "Terraform-Ansible-Docker-Openshift Demo"
-    }
-}
-
-#Create virtual network
-resource "azurerm_virtual_network" "vnet" {
-    name                = "ansible-vnet-westeurope-001"
-    address_space       = ["172.23.138.0/24"]
-    location            = "${azurerm_resource_group.ansible-docker-rg.location}"
-    resource_group_name = "${azurerm_resource_group.ansible-docker-rg.name}"
-}
-
-# Create subnet
-resource "azurerm_subnet" "ansible-vm-subnet" {
-  name                 = "ansible-subnet-westeurope-001 "
-  resource_group_name  = "${azurerm_resource_group.ansible-docker-rg.name}"
-  virtual_network_name = "${azurerm_virtual_network.vnet.name}"
-  address_prefix       = "172.23.138.0/24"
-}
-
-# Create public IP
-resource "azurerm_public_ip" "publicip" {
-  count               = var.instance_count
-  name                = "${var.resource_prefix}-${format("%02d", count.index)}-PublicIP"
-  location            = "${azurerm_resource_group.ansible-docker-rg.location}"
-  resource_group_name = "${azurerm_resource_group.ansible-docker-rg.name}"
-  allocation_method   = "Static"
-}
-
-# Create network security group and rule
-resource "azurerm_network_security_group" "ansible-docker-nsg" {
-  name                = "nsg-ansible-docker-001 "
-  location            = "${azurerm_resource_group.ansible-docker-rg.location}"
-  resource_group_name = "${azurerm_resource_group.ansible-docker-rg.name}"
-
-  security_rule {
-    name                       = "SSH"
-    priority                   = 1001
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-}
-
 # Create network interface
 resource "azurerm_network_interface" "nic" {
   count               = var.instance_count
   name                = "${var.resource_prefix}-${format("%02d", count.index)}-NIC"
-  location            = "${azurerm_resource_group.ansible-docker-rg.location}"
-  resource_group_name = "${azurerm_resource_group.ansible-docker-rg.name}"
+  location            = "${azurerm_resource_group.ansible-rg.location}"
+  resource_group_name = "${azurerm_resource_group.ansible-rg.name}"
 
   ip_configuration {
     name                          = "niccfg-vmterraform"
@@ -79,8 +26,8 @@ resource "azurerm_network_interface" "nic" {
 resource "azurerm_virtual_machine" "example_linux_vm" {
     count                 = "${var.instance_count}"
     name                  = "${var.resource_prefix}-${format("%02d", count.index)}"
-    location              = "${azurerm_resource_group.ansible-docker-rg.location}"
-    resource_group_name   = "${azurerm_resource_group.ansible-docker-rg.name}"
+    location              = "${azurerm_resource_group.ansible-rg.location}"
+    resource_group_name   = "${azurerm_resource_group.ansible-rg.name}"
     network_interface_ids = [element(azurerm_network_interface.nic.*.id, count.index)]
     vm_size               = "${var.ansible_node_vm_size}"
 
