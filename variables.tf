@@ -56,3 +56,8 @@ variable "client_secret" {
 variable "tenant_id" {
   type = "string"
 }
+
+variable "id" {
+  type = "string"
+}
+
