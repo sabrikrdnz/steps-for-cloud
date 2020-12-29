@@ -1,24 +1,31 @@
 provider "azurerm" {
   # whilst the `version` attribute is optional, we recommend pinning to a given version of the Provider
-  subscription_id = "${var.subs_id}"
-  client_id = "${var.client_id}"
-  client_secret = "${var.client_secret}"
-  tenant_id = "${var.tenant_id}"
+  subscription_id = var.subs_id
+  client_id = var.client_id
+  client_secret = var.client_secret
+  tenant_id = var.tenant_id
   version = "=2.40.0"
   features {}
 }
+
+data "azurerm_subnet" "ansible-vm-subnet" {
+  name                 = "ansible-subnet-westeurope-001"
+  virtual_network_name = "ansible-vnet-westeurope-001"
+  resource_group_name  = "ansible-rg"
+}
+
 # Create network interface
 resource "azurerm_network_interface" "nic" {
   count               = var.instance_count
   name                = "${var.resource_prefix}-${format("%02d", count.index)}-NIC"
-  location            = "${azurerm_resource_group.ansible-rg.location}"
-  resource_group_name = "${azurerm_resource_group.ansible-rg.name}"
+  location            = var.resource_group_location
+  resource_group_name = var.resource_group_name
 
   ip_configuration {
     name                          = "niccfg-vmterraform"
-    subnet_id                     = "${azurerm_subnet.ansible-vm-subnet.id}"
+    subnet_id                     = "${data.azurerm_subnet.ansible-vm-subnet.id}"
     private_ip_address_allocation = "dynamic"
-    public_ip_address_id          = element(azurerm_public_ip.publicip.*.id, count.index)
+    #public_ip_address_id          = element(azurerm_public_ip.publicip.*.id, count.index)
   }
 }
 
@@ -26,8 +33,8 @@ resource "azurerm_network_interface" "nic" {
 resource "azurerm_virtual_machine" "example_linux_vm" {
     count                 = "${var.instance_count}"
     name                  = "${var.resource_prefix}-${format("%02d", count.index)}"
-    location              = "${azurerm_resource_group.ansible-rg.location}"
-    resource_group_name   = "${azurerm_resource_group.ansible-rg.name}"
+    location              = "${var.resource_group_location}"
+    resource_group_name   = "${var.resource_group_name}"
     network_interface_ids = [element(azurerm_network_interface.nic.*.id, count.index)]
     vm_size               = "${var.ansible_node_vm_size}"
 
@@ -55,7 +62,7 @@ resource "azurerm_virtual_machine" "example_linux_vm" {
         disable_password_authentication = true
         ssh_keys {
             path     = "/home/uygulama/.ssh/authorized_keys"
-            key_data = file("~/.ssh/id_rsa.pub")
+            key_data = file("~/.ssh/ansible_controller_idrsa.pub")
         }
     }
 

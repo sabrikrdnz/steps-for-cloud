@@ -57,7 +57,3 @@ variable "tenant_id" {
   type = "string"
 }
 
-variable "id" {
-  type = "string"
-}
-
