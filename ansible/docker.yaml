@@ -1,0 +1,8 @@
+- hosts: docker_server
+  become: true
+  tasks:
+  - name: install python modules
+    yum:
+      name: python3
+      state: present
+    become_user: root

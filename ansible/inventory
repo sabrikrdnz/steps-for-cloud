@@ -1,5 +1,7 @@
 [dev]
 node1.example.com
+[docker_server]
+node1.example.com
 [test]
 node2.example.com
 [prod]

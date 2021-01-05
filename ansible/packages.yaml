@@ -1,0 +1,21 @@
+---
+- name: Install PHP and MariaDB
+  hosts: dev,test,prod
+  tasks:
+    - yum:
+         name:
+           - php
+           - mariadb
+         state: present
+- name: Install DEV Tool
+  hosts: dev
+  tasks:
+    - yum:
+         name: "@RPM Development Tools"
+         state: present
+- name: Update all packages
+  hosts: dev,test,prod
+  tasks:
+    - yum:
+         name: '*'
+         state: latest
